@@ -9,8 +9,9 @@
     "dev": "next dev -p 3001",
     "lint": "next lint",
     "start": "next start",
-    "postbuild": "echo 'Build completed successfully'",
-    "prestart": "echo 'Starting application on Azure'"
+    "export": "next build",
+    "postbuild": "echo 'Static build completed successfully'",
+    "prestart": "echo 'Starting static application on Azure'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
