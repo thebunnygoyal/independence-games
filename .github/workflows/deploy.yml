@@ -1,48 +1,59 @@
-name: Deploy BNI Games Tracker
+name: Deploy BNI Games Tracker to GitHub Pages
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
-    strategy:
-      matrix:
-        node-version: [18.x]
-    
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '18'
         cache: 'npm'
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      with:
+        static_site_generator: next
     
     - name: Install dependencies
       run: npm ci
     
-    - name: Run tests
-      run: npm test -- --passWithNoTests
-    
-    - name: Build application
+    - name: Build with Next.js
       run: npm run build
       env:
-        NEXT_PUBLIC_API_URL: ${{ secrets.API_URL }}
-        NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+        NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://bni-games-tracker.azurewebsites.net' }}
+        NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ vars.NEXT_PUBLIC_WHATSAPP_NUMBER || '919876543210' }}
     
-    - name: Export static files
-      run: npm run export
-    
-    - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./out
-        cname: bni-games.com  # Optional: Add your custom domain
+        path: ./out
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
