@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Build application
+    - name: Build static application
       run: npm run build
       env:
         NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://bni-games-tracker.azurewebsites.net' }}
@@ -33,4 +33,4 @@ jobs:
       with:
         app-name: 'bnigames'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: .
+        package: './out'
